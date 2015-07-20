@@ -1,0 +1,3 @@
+module IrkitManager
+  VERSION = "0.0.1"
+end

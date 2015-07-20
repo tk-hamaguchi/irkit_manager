@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'logger'
+
+require 'irkit_manager'
+require 'irkit'
+
+DEVICE_ADDR = '192.168.100.192'
+
+begin
+
+  logger = Logger.new(STDOUT)
+
+  opts = ARGV.getopts('d', 'debug')
+  if opts['d'] || opts['debug']
+    logger.level = Logger::DEBUG
+    logger.debug 'Enable DEBUG mode.'
+  else
+    logger.level = Logger::INFO
+  end
+
+  logger.debug "IP for IRKit : #{DEVICE_ADDR}"
+
+  unless irkit = IRKit::Device.new(address: DEVICE_ADDR)
+    logger.error "Could not find IRKit at #{DEVICE_ADDR}."
+    exit 1
+  end
+
+  logger.debug 'Connection successful.'
+
+  unless res = irkit.get_messages
+    logger.warn 'no data'
+    exit 2
+  end
+
+  logger.debug 'Recieve data.'
+
+  IrkitManager::Decoder.execute!(res.data).each do |sec|
+    logger.info IrkitManager::DataMapper.convert_to_symbol(sec)
+  end
+
+  exit 0
+
+resuce Exception => e
+  exit 10000
+end
+
